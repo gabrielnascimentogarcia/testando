@@ -1,4 +1,7 @@
-0:  0 00 10 00 0 1 1 0 0 0000 0000 0000 00000000
+import os
+
+# Conteúdo exato do control_store.txt extraído do repositório
+CONTENT = """0:  0 00 10 00 0 1 1 0 0 0000 0000 0000 00000000
 1:  0 00 00 00 0 0 1 0 1 0000 0110 0000 00000000
 2:  1 01 10 00 0 0 0 0 1 0011 0000 0000 00011100
 3:  0 01 00 10 0 0 0 0 1 0100 0011 0011 00010011
@@ -87,3 +90,9 @@
 00 01 00 0 0 0 0 1 1010 0011 1001 00000000
 77: 0 00 11 00 0 0 0 0 1 1010 0000 1010 00000000
 78: 0 11 00 00 0 0 0 0 1 1010 1010 0110 01001011
+"""
+
+os.makedirs("src/mic1", exist_ok=True)
+with open("src/mic1/control_store.txt", "w", encoding="utf-8") as f:
+    f.write(CONTENT)
+print("src/mic1/control_store.txt criado com sucesso.")

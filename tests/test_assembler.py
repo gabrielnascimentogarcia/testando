@@ -1,4 +1,5 @@
 import pytest
+import textwrap
 from src.components.memory import Memory
 from src.components.signals import SignalSender
 from src.mic1.assembler_v2 import AssemblerV2
@@ -8,13 +9,17 @@ from src.utils.bit_utils import BitArray
 def create_memory():
     return Memory(4096, 16, SignalSender(0), SignalSender(0), None, None, "MP")
 
+def assemble_code(mp, code):
+    # Remove indentação comum para satisfazer a regex estrita do Assembler
+    AssemblerV2.assemble(mp, textwrap.dedent(code))
+
 def test_assembler1():
     memory = create_memory()
     assembly_code = """
     LOCO 1
     STOD 4
     """
-    AssemblerV2.assemble(memory, assembly_code)
+    assemble_code(memory, assembly_code)
     
     # LOCO 1 -> 0111 (LOCO) + 000000000001 (1) -> 0111000000000001
     assert BitArray.from_bit_string("0111000000000001").compare(memory.cell(0))
@@ -30,7 +35,7 @@ def test_assembler2():
     STOD var2
     STOD var2
     """
-    AssemblerV2.assemble(memory, assembly_code)
+    assemble_code(memory, assembly_code)
     
     # 0: LOCO 1
     assert BitArray.from_bit_string("0111000000000001").compare(memory.cell(0))
@@ -52,15 +57,15 @@ def test_assembler3():
     STOD var2
     STOD var2
     """
-    AssemblerV2.assemble(memory, assembly_code)
+    assemble_code(memory, assembly_code)
     
-    # Should produce same binary as test_assembler2 but logic is explicit declaration
+    # Same logic as assembler2
     assert BitArray.from_bit_string("0111000000000001").compare(memory.cell(0))
     assert memory.cell(1).compare(memory.cell(2))
     assert memory.cell(3).compare(memory.cell(4))
 
 def test_example1_run():
-    # Integração: Montar e Executar
+    # Integração: Montar e Executar (Parcial sem Control Store)
     mic1 = Mic1()
     assembly_code = """
     LOCO 1
@@ -69,15 +74,9 @@ def test_example1_run():
     ADDD var1
     STOD var2
     """
-    AssemblerV2.assemble(mic1.mp, assembly_code)
-    
-    # Precisamos do control_store.txt para rodar StepMacro!
-    # Como não baixamos, este teste falhará se não mockarmos ou tivermos o arquivo.
-    # Assumindo que o arquivo existe ou a lógica de controle falha graciosamente:
-    
-    # mic1.step_macro() 
-    # Comentado pois sem microcódigo não executa nada útil.
-    pass 
+    assemble_code(mic1.mp, assembly_code)
+    # Sem control_store.txt, não podemos chamar step_macro ainda
+    # mic1.step_macro()
 
 def test_constant():
     mic1 = Mic1()
@@ -89,7 +88,7 @@ def test_constant():
     LOCO C1
     LOCO C10
     """
-    AssemblerV2.assemble(mic1.mp, assembly_code)
+    assemble_code(mic1.mp, assembly_code)
     
     # LOCO C0 -> LOCO 0
     assert mic1.mp.cell(0).compare(BitArray.from_bit_string("0111000000000000"))
